@@ -13,4 +13,5 @@ public:
     Scene scene;
 
     void render(unsigned char *img);
+	float shade(Ray *ray, Vector * natural_color, int obj_idx, int depth,float coef);
 };

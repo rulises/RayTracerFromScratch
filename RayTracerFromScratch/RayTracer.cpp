@@ -12,16 +12,69 @@ RayTracer::~RayTracer(void)
 {
 }
 
+float RayTracer::shade(Ray *ray, Vector * natural_color, int obj_idx, int depth, float coef){
+
+	// Find the normal for this new vector at the point of intersection
+	Vector point_intersect =  Vector(vecScale(&ray->direction, depth));
+	Vector new_position =  Vector(vecAdd(&ray->position,&point_intersect));
+	Vector normal = Vector(vecMinus(&new_position, &scene.spheres[obj_idx].position));
+	float magnitude = vecMagnitude( &normal);
+	if(magnitude == 0.0f) return -1;
+	float div = 1.0f / sqrtf(magnitude);
+	normal = vecScale(&normal, div);
+
+	//Start with the object's material
+	Material current_material =  scene.materials[obj_idx];
+	//Get the lightning
+	for each (Light light in scene.lights)
+	{
+		Vector distance_isect = vecMinus(&light.position,&new_position);
+		if (vecDot(&normal,&distance_isect) <= 0.0f) continue;
+		float magnitude = vecMagnitude( &distance_isect);
+		if(sqrtf(magnitude) == 0.0f) continue;
+		float div = 1.0f / sqrtf(magnitude);
+		Vector normal_light = vecScale(&distance_isect, div);
+                               
+        Ray lightRay = Ray(new_position, normal_light);
+
+
+		float illumination = vecDot(&lightRay.direction, &normal) * coef;
+		Vector color = vecTimes( &vecScale(&light.intensity,illumination),&current_material.diffuse);
+		natural_color->x += color.x;
+		natural_color->y += color.y;
+		natural_color->z += color.z;
+	}
+	coef *= current_material.reflection;
+	float reflect = 2.0f * vecDot(&ray->direction, &normal);
+	ray->position = Vector(new_position);
+    Vector tmp =  Vector(vecScale(&normal, reflect));
+	ray->direction = Vector(vecMinus(&ray->direction, &tmp));
+    return coef;
+                                        // Calculate the shadows 
+                                       /* bool inShadow = FALSE;
+                                        unsigned int k;
+                                        for (k = 0; k < SPHERES; ++k) {
+                                                if (collideRaySphere(&lightRay, &myScene.spheres[k], &t)){
+                                                        inShadow = TRUE;
+                                                        break;
+                                                }
+                                        }
+										  */     
+                                        //if (!inShadow){
+                                                //Diffuse reflaction using Lambert
+
+                                       // }  
+ 
+}
 void RayTracer::render(unsigned char *img){
 
         int x,y;
         for (y = 0; y < HEIGHT; y++){
                 for (x = 0; x < WIDTH; x++) {
-                        
-                        float red = 0, green = 0, blue = 0;
+  
                         float coef = 1.0f;
                         int level = 0;
-
+						Vector natural_color = Vector(0.0f, 0.0f, 0.0f);
 						//Cast a ray per pixel
                         Vector pos =  Vector((float)x,(float)y,-10000.0f);
                         Vector dir =  Vector(0.0, 0.0, 1.0);
@@ -36,66 +89,14 @@ void RayTracer::render(unsigned char *img){
 									}
 							}
 							if(current_sphere_idx == -1) break;
-
-							Vector scaled =  Vector(vecScale(&ray.direction, t));
-							Vector newStart =  Vector(vecAdd(&ray.position,&scaled));
-                        
-							// Find the normal for this new vector at the point of intersection
-							Vector normal = Vector(vecMinus(&newStart, &scene.spheres[current_sphere_idx].position));
-							float temp = vecDot(&normal, &normal);
-							if(temp == 0.0f) break;
-
-							temp = 1.0f / sqrtf(temp);
-							normal = vecScale(&normal, temp);
-
-							// Get current material to determine the colour 
-							Material current_material =  scene.materials[current_sphere_idx];
-
-							// Find the value of the light at this point 
-							 unsigned int j;
-                                for (j = 0; j < LIGHTS; ++j){
-                                        Light current = scene.lights[j];
-                                        Vector dist = vecMinus(&current.position,&newStart);
-                                        if (vecDot(&normal,&dist) <= 0.0f) continue;
-                                        float t = sqrtf(vecDot(&dist,&dist));
-                                        if (t <= 0.0f) continue;
-                                        Ray lightRay;
-                                        lightRay.position = newStart;
-                                        lightRay.direction = vecScale(&dist,(1/t)); 
-                                        
-                                        // Calculate the shadows 
-                                       /* bool inShadow = FALSE;
-                                        unsigned int k;
-                                        for (k = 0; k < SPHERES; ++k) {
-                                                if (collideRaySphere(&lightRay, &myScene.spheres[k], &t)){
-                                                        inShadow = TRUE;
-                                                        break;
-                                                }
-                                        }
-										  */     
-                                        //if (!inShadow){
-                                                //Diffuse reflaction using Lambert
-										float lambert = vecDot(&lightRay.direction, &normal) * coef;
-                                                red += lambert * current.intensity.x * current_material.diffuse.x;
-												green += lambert * current.intensity.y * current_material.diffuse.y;
-												blue += lambert * current.intensity.z * current_material.diffuse.z;
-                                       // }  
- 
-                                }
-
-								// Iterate over the reflection 
-                                coef *= current_material.reflection;
-								float reflect = 2.0f * vecDot(&ray.direction, &normal);
-								ray.position = newStart;
-                                Vector tmp =  Vector(vecScale(&normal, reflect));
-								ray.direction = Vector(vecMinus(&ray.direction, &tmp));
-                                level++;
-                                // Limit iteration depth to 10   
+							coef = shade(&ray, &natural_color, current_sphere_idx, t, coef);
+							if(coef == -1) break;
+							level++;
 						} while ((coef > 0.0f) && (level < 10));
 
-                        img[(x+y*scene.width)*3+2] = (unsigned char)min(red*255.0f, 255.0f);
-                        img[(x+y*scene.width)*3+1] = (unsigned char)min(green*255.0f, 255.0f);
-                        img[(x+y*scene.width)*3+0] = (unsigned char)min(blue*255.0f,255.0f);
+                        img[(x+y*scene.width)*3+2] = (unsigned char)min(natural_color.x*255.0f, 255.0f);
+                        img[(x+y*scene.width)*3+1] = (unsigned char)min(natural_color.y*255.0f, 255.0f);
+                        img[(x+y*scene.width)*3+0] = (unsigned char)min(natural_color.z*255.0f,255.0f);
                 }
         }
 }
