@@ -12,7 +12,7 @@ RayTracer::~RayTracer(void)
 {
 }
 
-float RayTracer::shade(Ray *ray, Vector * natural_color, int obj_idx, int depth, float coef){
+float RayTracer::shade(Ray *ray, Vector * natural_color, int obj_idx, float depth, float coef){
 
 	// Find the normal for this new vector at the point of intersection
 	Vector point_intersect =  Vector(vecScale(&ray->direction, depth));
@@ -35,14 +35,26 @@ float RayTracer::shade(Ray *ray, Vector * natural_color, int obj_idx, int depth,
 		float div = 1.0f / sqrtf(magnitude);
 		Vector normal_light = vecScale(&distance_isect, div);
                                
-        Ray lightRay = Ray(new_position, normal_light);
+        Ray light_ray = Ray(new_position, normal_light);
 
+		bool is_shadow = FALSE;
+		for (int i= 0; i < scene.spheres.size(); i++)
+		{
+			if (intersectRaySphere(&light_ray, &(scene.spheres[i]), &depth))
+			{
+				is_shadow = TRUE;
+				break;
+			}
+		}
 
-		float illumination = vecDot(&lightRay.direction, &normal) * coef;
-		Vector color = vecTimes( &vecScale(&light.intensity,illumination),&current_material.diffuse);
-		natural_color->x += color.x;
-		natural_color->y += color.y;
-		natural_color->z += color.z;
+		if(is_shadow)
+		{
+			float illumination = vecDot(&light_ray.direction, &normal) * coef;
+			Vector color = vecTimes( &vecScale(&light.intensity,illumination),&current_material.diffuse);
+			natural_color->x += color.x;
+			natural_color->y += color.y;
+			natural_color->z += color.z;
+		}
 	}
 	coef *= current_material.reflection;
 	float reflect = 2.0f * vecDot(&ray->direction, &normal);
@@ -50,21 +62,6 @@ float RayTracer::shade(Ray *ray, Vector * natural_color, int obj_idx, int depth,
     Vector tmp =  Vector(vecScale(&normal, reflect));
 	ray->direction = Vector(vecMinus(&ray->direction, &tmp));
     return coef;
-                                        // Calculate the shadows 
-                                       /* bool inShadow = FALSE;
-                                        unsigned int k;
-                                        for (k = 0; k < SPHERES; ++k) {
-                                                if (collideRaySphere(&lightRay, &myScene.spheres[k], &t)){
-                                                        inShadow = TRUE;
-                                                        break;
-                                                }
-                                        }
-										  */     
-                                        //if (!inShadow){
-                                                //Diffuse reflaction using Lambert
-
-                                       // }  
- 
 }
 void RayTracer::render(unsigned char *img){
 
