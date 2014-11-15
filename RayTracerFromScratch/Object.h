@@ -4,9 +4,9 @@
 class Object
 {
 public:
-	Object(void):position(Vector()),material(-1.0){};
+	Object(void):position(Vector()),material(-1){};
 	Object(Vector pos, int mat):position(pos), material(mat) {};
-	~Object(void);
+	virtual ~Object(){};
 
     Vector position;
     int material;

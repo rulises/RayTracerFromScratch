@@ -9,7 +9,7 @@ static const float myMaterials[MATERIALS][8]={ {0.8, 0.8, 0.0, 0.5, 1.0, 1.0, 1.
                                              };
 /* Scene Spheres */
 /* pos x, pos y, pos z, size, material index */ 
-static const float mySpheres[SPHERES-1][5]={ {150.0, 400.0, 50.0, 50, 0},
+static const float mySpheres[OBJECTS-1][5]={ {150.0, 400.0, 50.0, 50, 0},
                                            {500.0, 200.0, 100.0, 50, 1},
                                            {300.0, 140.0, 200.0, 50, 2}
                                          };
@@ -32,9 +32,9 @@ void Scene::addMaterial(Material * mat)
 {
 	materials.push_back(*mat);
 }
-void Scene::addSphere(Sphere * s)
+void Scene::addObject(Object * o)
 {
-	spheres.push_back(*s);
+	objects.push_back(o);
 }
 void Scene::addLight(Light * l)
 {
@@ -58,13 +58,13 @@ void defaultScene(Scene *scene){
                 Material *mat = new Material(spec, diff, ref, pow);
 				scene->addMaterial(mat);
         }
-        /* Populate all spheres */
-        for (i=0; i < SPHERES; i++){
+        /* Populate all objects */
+        for (i=0; i < OBJECTS; i++){
                 Vector pos = Vector(mySpheres[i][0],mySpheres[i][1],mySpheres[i][2]);
                 float r = mySpheres[i][3];
                 int mat = (int)mySpheres[i][4];
-                Sphere *s = new Sphere(pos,mat,r);
-                scene->addSphere(s);
+                Object *o = new Sphere(pos,mat,r);
+                scene->addObject(o);
         }
         /* Populate all lights */
         for (i=0; i < LIGHTS; i++){

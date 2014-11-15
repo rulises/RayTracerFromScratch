@@ -17,7 +17,7 @@ float RayTracer::shade(Ray *ray, Vector * natural_color, int obj_idx, float dept
 	// Find the normal for this new vector at the point of intersection
 	Vector point_intersect =  Vector(vecScale(&ray->direction, depth));
 	Vector new_position =  Vector(vecAdd(&ray->position,&point_intersect));
-	Vector normal = Vector(vecMinus(&new_position, &scene.spheres[obj_idx].position));
+	Vector normal = Vector(vecMinus(&new_position, &scene.objects[obj_idx]->position));
 	float magnitude = vecMagnitude( &normal);
 	if(magnitude == 0.0f) return -1;
 	float div = 1.0f / sqrtf(magnitude);
@@ -38,9 +38,9 @@ float RayTracer::shade(Ray *ray, Vector * natural_color, int obj_idx, float dept
         Ray light_ray = Ray(new_position, normal_light);
 
 		bool is_shadow = FALSE;
-		for (int i= 0; i < scene.spheres.size(); i++)
+		for (int i= 0; i < scene.objects.size(); i++)
 		{
-			if (intersectRaySphere(&light_ray, &(scene.spheres[i]), &depth))
+			if (intersectRayObject(&light_ray, scene.objects[i], &depth))
 			{
 				is_shadow = TRUE;
 				break;
@@ -80,8 +80,8 @@ void RayTracer::render(unsigned char *img){
 							//Find closest intersection
 							float t = 20000.0f;
 							int current_sphere_idx = -1;
-							for (int i= 0; i < scene.spheres.size(); i++){
-								if (intersectRaySphere(&ray, &(scene.spheres[i]), &t)){
+							for (int i= 0; i < scene.objects.size(); i++){
+								if (intersectRayObject(&ray, scene.objects[i], &t)){
 										current_sphere_idx = i;
 									}
 							}

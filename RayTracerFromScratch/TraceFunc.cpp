@@ -1,6 +1,10 @@
 #include "TraceFunc.h"
 
-
+bool intersectRayObject(Ray *ray, Object *object, float *t)
+{
+	Sphere* s = dynamic_cast<Sphere*>(object);
+	return intersectRaySphere(ray, s, t);
+}
 bool intersectRaySphere(Ray *ray, Sphere *sphere, float *t)
 {
         bool ret = FALSE;

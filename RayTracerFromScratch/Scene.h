@@ -8,7 +8,8 @@
 /* default values */
 #define MATERIALS   4
 #define LIGHTS      2
-#define SPHERES     4
+//#define SPHERES     4
+#define OBJECTS		4
 
 class Scene
 {
@@ -19,12 +20,13 @@ public:
     int width;
     int height;
     std::vector<Light> lights;
-    //std::list<Object> *objects;
-    std::vector<Sphere> spheres;
+    std::vector<Object*> objects;
+    //std::vector<Sphere> spheres;
 	std::vector<Material> materials;
 
     void addMaterial(Material * mat);
-    void addSphere(Sphere * s);
+    //void addSphere(Sphere * s);
+    void addObject(Object * o);
     void addLight(Light *l);
 };
 
