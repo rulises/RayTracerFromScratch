@@ -4,6 +4,7 @@
 #include "Scene.h"
 #include "Ray.h"
 #include "TraceFunc.h"
+
 class RayTracer
 {
 public:
